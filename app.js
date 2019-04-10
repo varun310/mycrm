@@ -68,6 +68,8 @@ var docRef = db.collection('contacts');
 var userRef = db.collection('users');
 var noteRef = db.collection('notes');
 
+var contactCount = 14;
+var notesCount = 4;
 
 /**
 LIST USERS API
@@ -99,7 +101,8 @@ app.get('/listUsers',/* @callback */ function (req, res) {
 app.post('/createContact', urlencodedParser, function (req, res){
 	
 	 
-	var c1 =  req.body.contactno;
+	//var c1 =  req.body.contactno;
+	var c1 =  contactCount;
 	var tstamp = Date.now();
 	//var pass = encrypt(req.body.password);
 	var setAda = {
@@ -123,7 +126,9 @@ app.post('/createContact', urlencodedParser, function (req, res){
 		location: {"_latitude":req.body.latitude,"_longitude":req.body.longitude}
 	  
 	};
-	docRef.doc(c1).set(setAda);
+	docRef.doc(c1.toString()).set(setAda);
+	contactCount = contactCount + 1;
+	console.log(contactCount.toString() + "is added");
 	res.send(setAda);
  });
 
@@ -132,7 +137,7 @@ app.post('/authUser', urlencodedParser, function (req, res){
 	
 	
 	var user = req.body.user;
-	var passinput = req.body.pass;
+	var pass = req.body.pass;
 	//var pass = encrypt(passinput);
 	
 	if(user == '' || user == null || pass == '' || pass == null){
@@ -140,18 +145,21 @@ app.post('/authUser', urlencodedParser, function (req, res){
 	res.status(404).send('No Data');
 	}
 	else{
-	var queryRef = userRef.where('email','==',user).where('password','==',pass).get();
+	var queryRef = docRef.where('email','==',user).where('password','==',pass).get();
 
 	var searchData = {};
 	queryRef.then((snapshot) => {
 		snapshot.forEach((doc) => {
 			searchData[doc.id] = doc.data();
-			if(decrypt(doc.data().password) == passinput){
+			/**
+			if(doc.data().password == pass){
 				res.send("true");
 			}
-			else{
-				res.send("false")
+			if(doc.data().password != pass){
+				res.send("false");
 			}
+			**/
+			res.send(searchData)
 		});
 	
   })
@@ -208,6 +216,42 @@ queryRef.then((snapshot) => {
     console.log('Error getting documents', err);
   });
 });
+
+
+/* Read Note */
+app.post('/readNotes', urlencodedParser, function (req, res){
+	var email = req.body.email;
+	var data = {};
+	//Read all Notes
+	noteRef.doc(email).collection('1').get()
+	.then((snapshot) => {
+    snapshot.forEach((doc) => {
+		data[doc.id] = doc.data();
+		console.log(doc.id, '=>', doc.data());
+		});
+		res.send(data);
+	})
+	.catch((err) => {
+    console.log('Error getting documents', err);
+	});
+	
+ });
+ 
+ /* CREATE NOTE */
+app.post('/createNotes', urlencodedParser, function (req, res){
+	var email = req.body.email;
+	var note = req.body.note;
+	var tstamp = Date.now();
+
+	var setAda = noteRef.doc(email).collection('1').doc(notesCount.toString()).set({
+		tamp: tstamp,
+		note: note,
+	});
+	notesCount = notesCount + 1;
+	console.log(notesCount.toString() + "is added");
+	res.send(setAda);
+ });
+
 
 
 // start server on the specified port and binding host
