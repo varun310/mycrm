@@ -133,7 +133,34 @@ app.post('/createContact', urlencodedParser, function (req, res){
  });
 
  /** Login USER **/
-app.post('/authUser', urlencodedParser, function (req, res){
+ app.post('/authUser', urlencodedParser, function (req, res){
+	var user = req.body.user;
+	var pass = req.body.pass;
+	//var pass = encrypt(passinput);
+	
+	if(user == '' || user == null || pass == '' || pass == null){
+	console.log('No Data');
+	res.status(404).send('No Data');
+	}
+	else{
+	var queryRef = docRef.where('email','==',user).where('password','==',pass).get();
+	var searchData = {};
+	queryRef.then((snapshot) => {
+		flag = "false";
+		snapshot.forEach((doc) => {
+			if(doc.data().password == pass){
+				flag = "true";
+			}
+		});
+		res.send(flag);	
+  })
+  .catch((err) => {
+    console.log('Error getting documents', err);
+  });
+}
+ });
+ 
+/**app.post('/authUser', urlencodedParser, function (req, res){
 	
 	
 	var user = req.body.user;
@@ -151,14 +178,14 @@ app.post('/authUser', urlencodedParser, function (req, res){
 	queryRef.then((snapshot) => {
 		snapshot.forEach((doc) => {
 			searchData[doc.id] = doc.data();
-			/**
+	
 			if(doc.data().password == pass){
 				res.send("true");
 			}
 			if(doc.data().password != pass){
 				res.send("false");
 			}
-			**/
+	
 			res.send(searchData)
 		});
 	
@@ -168,7 +195,8 @@ app.post('/authUser', urlencodedParser, function (req, res){
   });
 }
  });
- 
+**/
+
  /** SEARCH **/
 app.post('/search', urlencodedParser, function (req, res){
 
